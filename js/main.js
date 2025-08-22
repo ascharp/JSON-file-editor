@@ -3,16 +3,58 @@ let currentJsonData = null;
 let originalJsonData = null; // Store original data for comparison
 let mdcComponents = {};
 
+// Global functions for modal onclick handlers (must be defined at global scope)
+window.cancelExportAction = function() {
+    console.log('Cancel export action called');
+    closeExportDialog();
+};
+
+window.confirmExportAction = function() {
+    console.log('Confirm export action called');
+    console.log('Current export data:', window.currentExportData);
+    
+    if (window.currentExportData) {
+        console.log('Calling performExport...');
+        performExport(window.currentExportData);
+        closeExportDialog();
+    } else {
+        console.error('No export data available!');
+        showSnackbar('Error: No data to export', 'error');
+        closeExportDialog();
+    }
+};
+
+// Test function to verify download works
+window.testExport = function() {
+    console.log('Test export called');
+    const testData = { test: 'This is a test export', timestamp: new Date().toISOString() };
+    performExport(testData);
+};
+
+console.log('JavaScript loaded successfully');
+
 // Initialize Material Design Components
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...');
+    
     // Ensure upload section is visible
     const uploadSection = document.querySelector('.upload-section');
     if (uploadSection) {
         uploadSection.style.display = 'block';
+        console.log('Upload section made visible');
     }
     
     initializeMDCComponents();
     setupEventListeners();
+    
+    console.log('Initialization complete');
+    
+    // Test that global functions are accessible
+    console.log('Global functions defined:', {
+        cancelExportAction: typeof window.cancelExportAction,
+        confirmExportAction: typeof window.confirmExportAction,
+        testExport: typeof window.testExport
+    });
 });
 
 function initializeMDCComponents() {
@@ -96,11 +138,34 @@ function initializeMDCComponents() {
 }
 
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // File input change event
-    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+        console.log('File input listener added');
+    } else {
+        console.error('File input not found!');
+    }
     
     // Export button click event
-    document.getElementById('exportButton').addEventListener('click', exportJSON);
+    const exportButton = document.getElementById('exportButton');
+    if (exportButton) {
+        exportButton.addEventListener('click', function(e) {
+            console.log('Export button clicked!');
+            exportJSON();
+        });
+        console.log('Export button listener added');
+        
+        // Also add onclick as backup
+        exportButton.onclick = function(e) {
+            console.log('Export button onclick triggered!');
+            exportJSON();
+        };
+    } else {
+        console.error('Export button not found!');
+    }
     
     // Snackbar action button
     const snackbarAction = document.querySelector('.mdc-snackbar__action');
@@ -550,20 +615,36 @@ function getNestedValue(obj, path) {
 }
 
 function exportJSON() {
+    console.log('exportJSON called');
+    
     if (!currentJsonData || !originalJsonData) {
+        console.log('Missing JSON data');
         showSnackbar('No JSON data to export', 'error');
         return;
     }
 
     try {
+        console.log('Collecting form data...');
         const updatedData = collectFormData();
+        console.log('Collected data:', updatedData);
+        
+        console.log('Detecting changes...');
         const changes = detectChanges(originalJsonData, updatedData);
+        console.log('Detected changes:', changes);
+        
+        // TEMPORARY: Skip modal for testing - direct export
+        if (false) { // Change to true to test direct export
+            console.log('Direct export (testing)');
+            performExport(updatedData);
+            return;
+        }
         
         // Show confirmation modal with changes
+        console.log('Showing confirmation modal...');
         showExportConfirmation(changes, updatedData);
     } catch (error) {
-        showSnackbar('Error preparing export', 'error');
         console.error('Export preparation error:', error);
+        showSnackbar('Error preparing export', 'error');
     }
 }
 
@@ -627,8 +708,12 @@ function detectChanges(original, updated, path = '') {
 }
 
 function showExportConfirmation(changes, updatedData) {
+    console.log('showExportConfirmation called with:', { changesCount: changes.length, updatedData });
+    
     const dialog = document.getElementById('exportConfirmDialog');
     const changesContainer = document.getElementById('changesContainer');
+    
+    console.log('Dialog elements found:', { dialog: !!dialog, changesContainer: !!changesContainer });
     
     // Clear previous content
     changesContainer.innerHTML = '';
@@ -718,56 +803,70 @@ function formatValueChange(change) {
 }
 
 function setupExportConfirmationHandlers(updatedData) {
-    const cancelBtn = document.getElementById('cancelExport');
-    const confirmBtn = document.getElementById('confirmExport');
+    console.log('setupExportConfirmationHandlers called with:', updatedData);
+    
+    // Store the data globally for the onclick handlers
+    window.currentExportData = updatedData;
+}
+
+
+
+function closeExportDialog() {
     const dialog = document.getElementById('exportConfirmDialog');
-    
-    // Remove existing listeners
-    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-    confirmBtn.replaceWith(confirmBtn.cloneNode(true));
-    
-    // Get new references
-    const newCancelBtn = document.getElementById('cancelExport');
-    const newConfirmBtn = document.getElementById('confirmExport');
-    
-    newCancelBtn.addEventListener('click', () => {
+    if (dialog) {
         dialog.style.opacity = '0';
         setTimeout(() => {
             dialog.style.display = 'none';
         }, 300);
-    });
-    
-    newConfirmBtn.addEventListener('click', () => {
-        dialog.style.opacity = '0';
-        setTimeout(() => {
-            dialog.style.display = 'none';
-        }, 300);
-        
-        // Perform the actual export
-        performExport(updatedData);
-    });
+    }
 }
 
 function performExport(updatedData) {
+    console.log('=== PERFORM EXPORT CALLED ===');
+    console.log('Data:', updatedData);
+    
+    if (!updatedData) {
+        console.error('No data provided to export!');
+        showSnackbar('Error: No data to export', 'error');
+        return;
+    }
+    
     try {
+        console.log('Creating JSON string...');
         const jsonString = JSON.stringify(updatedData, null, 2);
+        console.log('JSON created, length:', jsonString.length);
         
-        // Create and download file
+        console.log('Creating blob...');
         const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        console.log('Creating download URL...');
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
         
-        a.href = url;
-        a.download = 'updated-config.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        console.log('Creating download link...');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'updated-config.json';
+        link.style.display = 'none';
         
+        console.log('Appending link to body...');
+        document.body.appendChild(link);
+        
+        console.log('Triggering download...');
+        link.click();
+        
+        console.log('Cleaning up...');
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('Cleanup complete');
+        }, 100);
+        
+        console.log('=== EXPORT SUCCESS ===');
         showSnackbar('JSON file exported successfully!', 'success');
+        
     } catch (error) {
+        console.error('=== EXPORT ERROR ===', error);
         showSnackbar('Error exporting JSON file', 'error');
-        console.error('Export error:', error);
     }
 }
 

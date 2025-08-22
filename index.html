@@ -62,6 +62,11 @@
                                 <i class="material-icons mdc-button__icon" aria-hidden="true">code</i>
                                 <span class="mdc-button__label">Load Sample JSON</span>
                             </button>
+                            <button class="mdc-button mdc-button--outlined" onclick="window.testExport()" style="margin-left: 8px;">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">bug_report</i>
+                                <span class="mdc-button__label">Test Export</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -170,10 +175,10 @@
                     </p>
                 </div>
                 <div class="mdc-dialog__actions">
-                    <button type="button" class="mdc-button mdc-button--outlined mdc-dialog__button" id="cancelExport">
+                    <button type="button" class="mdc-button mdc-button--outlined mdc-dialog__button" id="cancelExport" onclick="console.log('Cancel button HTML onclick'); window.cancelExportAction();">
                         <span class="mdc-button__label">Cancel</span>
                     </button>
-                    <button type="button" class="mdc-button mdc-button--raised mdc-dialog__button" id="confirmExport">
+                    <button type="button" class="mdc-button mdc-button--raised mdc-dialog__button" id="confirmExport" onclick="console.log('Confirm button HTML onclick'); window.confirmExportAction();">
                         <i class="material-icons mdc-button__icon">download</i>
                         <span class="mdc-button__label">Export JSON</span>
                     </button>

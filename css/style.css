@@ -402,7 +402,7 @@ body {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    cursor: pointer;
+    cursor: pointer !important;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -411,6 +411,10 @@ body {
     outline: none;
     position: relative;
     overflow: hidden;
+}
+
+.mdc-button * {
+    cursor: pointer !important;
 }
 
 .mdc-button:hover {
@@ -750,6 +754,8 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    position: relative;
+    z-index: 1210;
 }
 
 .mdc-dialog__button {
@@ -759,8 +765,11 @@ body {
     font-weight: 500;
     padding: 8px 16px;
     border-radius: 4px;
-    cursor: pointer;
+    cursor: pointer !important;
     transition: background-color 0.2s ease;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1211;
 }
 
 .mdc-dialog__button:hover {
