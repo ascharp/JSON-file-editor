@@ -1,0 +1,905 @@
+/* Global Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    color: #212121;
+    line-height: 1.5;
+}
+
+/* Typography */
+.mdc-typography--headline6 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+}
+
+.mdc-typography--body2 {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    opacity: 0.87;
+    margin: 0 0 16px 0;
+}
+
+/* Main Content Layout */
+.main-content {
+    padding: 24px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Card Styling */
+.mdc-card {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
+    background: white;
+    display: block;
+    width: 100%;
+    transition: box-shadow 0.3s ease;
+}
+
+.mdc-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.mdc-card__primary-action {
+    display: block;
+    width: 100%;
+}
+
+.mdc-card__media-content {
+    padding: 24px;
+    display: block;
+}
+
+/* Upload Section */
+.upload-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: block !important;
+    visibility: visible !important;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    min-height: 200px;
+}
+
+.upload-section .mdc-typography--headline6 {
+    color: white;
+    margin-bottom: 8px;
+}
+
+.upload-section .mdc-typography--body2 {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 24px;
+}
+
+.file-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    backdrop-filter: blur(10px);
+}
+
+.file-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.file-size {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.sample-json-section {
+    margin-top: 16px;
+}
+
+/* Configuration Form */
+.config-form {
+    display: grid;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.form-field {
+    position: relative;
+}
+
+.form-field-group {
+    border: 2px solid #e3f2fd;
+    border-radius: 12px;
+    padding: 20px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+    transition: all 0.3s ease;
+}
+
+.form-field-group:hover {
+    border-color: #bbdefb;
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.12);
+}
+
+.form-field-group h3 {
+    margin: 0 0 20px 0;
+    color: #1976d2;
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: capitalize;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.form-field-group h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, #1976d2, #42a5f5);
+    border-radius: 2px;
+}
+
+.form-field-group .form-field {
+    margin-bottom: 16px;
+}
+
+.form-field-group .form-field:last-child {
+    margin-bottom: 0;
+}
+
+/* Material Design Text Fields */
+.mdc-text-field {
+    width: 100%;
+    margin-bottom: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.mdc-text-field--outlined {
+    border-radius: 4px;
+}
+
+.mdc-text-field--textarea {
+    min-height: 120px;
+}
+
+.mdc-notched-outline {
+    position: relative;
+    border: 2px solid #e0e0e0;
+    border-radius: 4px;
+    transition: border-color 0.2s ease;
+}
+
+.mdc-text-field:focus-within .mdc-notched-outline {
+    border-color: #1976d2;
+    border-width: 2px;
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__trailing {
+    display: none; /* Simplified */
+}
+
+.mdc-notched-outline__notch {
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    background: white;
+    padding: 0 4px;
+    pointer-events: none;
+}
+
+.mdc-floating-label {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    font-size: 16px;
+    color: #757575;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: left top;
+    background: white;
+    padding: 0 4px;
+    margin-left: -4px;
+}
+
+.mdc-text-field__input {
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'Roboto', sans-serif;
+    color: #212121;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mdc-text-field__input:focus {
+    outline: none;
+}
+
+.mdc-text-field__resizer {
+    display: block;
+    position: relative;
+}
+
+/* Switch Styling */
+.mdc-switch {
+    position: relative;
+    width: 52px;
+    height: 32px;
+    display: inline-block;
+}
+
+.mdc-switch__track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 14px;
+    background-color: #000;
+    opacity: 0.38;
+    border-radius: 7px;
+    transition: all 0.2s ease;
+}
+
+.mdc-switch__handle-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.mdc-switch__handle {
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background-color: #fafafa;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.mdc-switch__native-control {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+}
+
+.mdc-switch--checked .mdc-switch__track {
+    background-color: #1976d2;
+    opacity: 0.5;
+}
+
+.mdc-switch--checked .mdc-switch__handle {
+    background-color: #1976d2;
+    transform: translateY(-50%) translateX(20px);
+}
+
+.mdc-switch__shadow,
+.mdc-switch__ripple {
+    display: none; /* Simplified */
+}
+
+/* Form Field Styling */
+.mdc-form-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.mdc-form-field label {
+    font-size: 16px;
+    color: #212121;
+    cursor: pointer;
+}
+
+/* Array Field Styling */
+.array-field {
+    border: 2px solid #fff3e0;
+    border-radius: 10px;
+    padding: 18px;
+    background: linear-gradient(145deg, #ffffff 0%, #fffbf5 100%);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.array-field:hover {
+    border-color: #ffcc02;
+    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.12);
+}
+
+.array-field h4 {
+    margin: 0 0 18px 0;
+    color: #f57c00;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: capitalize;
+    position: relative;
+    padding-bottom: 6px;
+}
+
+.array-field h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(90deg, #f57c00, #ffb74d);
+    border-radius: 1px;
+}
+
+.array-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.array-item input {
+    flex: 1;
+}
+
+.array-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Button Styling */
+.mdc-button {
+    margin: 8px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.mdc-button:hover {
+    transform: translateY(-1px);
+}
+
+.mdc-button--raised {
+    background-color: #1976d2;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mdc-button--raised:hover {
+    background-color: #1565c0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mdc-button--outlined {
+    border: 2px solid #1976d2;
+    color: #1976d2;
+    background: transparent;
+}
+
+.mdc-button--outlined:hover {
+    background-color: rgba(25, 118, 210, 0.08);
+}
+
+.mdc-button__ripple {
+    display: none; /* We'll handle hover effects with CSS */
+}
+
+.mdc-button__icon {
+    font-size: 18px;
+}
+
+.mdc-button__label {
+    /* No additional styling needed */
+}
+
+.btn-remove {
+    background-color: #f44336 !important;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-add {
+    background-color: #4caf50 !important;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Actions Section */
+.actions-section .mdc-card {
+    background-color: #f8f9fa;
+}
+
+.mdc-card__action-buttons {
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Loading and Success States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.success-highlight {
+    animation: successPulse 1s ease-out;
+}
+
+@keyframes successPulse {
+    0% { background-color: #4caf50; }
+    100% { background-color: transparent; }
+}
+
+/* Error States */
+.error-field .mdc-text-field {
+    border-color: #f44336 !important;
+}
+
+.error-message {
+    color: #f44336;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 16px;
+    }
+    
+    .container {
+        gap: 16px;
+    }
+    
+    .mdc-card__media-content {
+        padding: 16px;
+    }
+    
+    .config-form {
+        gap: 16px;
+    }
+    
+    .mdc-card__action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .mdc-button {
+        margin: 4px 0;
+        width: 100%;
+    }
+    
+    .array-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .array-controls {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 12px;
+    }
+    
+    .file-input-container {
+        align-items: stretch;
+    }
+    
+    .mdc-button {
+        width: 100%;
+        margin: 4px 0;
+    }
+}
+
+/* Top App Bar */
+.mdc-top-app-bar {
+    background-color: #1976d2;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mdc-top-app-bar--fixed {
+    position: fixed;
+}
+
+.mdc-top-app-bar__row {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.mdc-top-app-bar__section {
+    display: flex;
+    align-items: center;
+}
+
+.mdc-top-app-bar__section--align-start {
+    flex: 1;
+}
+
+.mdc-top-app-bar__section--align-end {
+    flex: 0;
+}
+
+.mdc-top-app-bar__title {
+    font-weight: 500;
+    font-size: 20px;
+    margin: 0;
+}
+
+.mdc-top-app-bar__action-item {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mdc-top-app-bar__action-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mdc-top-app-bar--fixed-adjust {
+    margin-top: 64px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Snackbar */
+.mdc-snackbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    background-color: #323232;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1100;
+    display: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+    min-width: 300px;
+    text-align: center;
+}
+
+.mdc-snackbar__surface {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.mdc-snackbar__label {
+    flex: 1;
+}
+
+.mdc-snackbar__actions {
+    margin-left: 16px;
+}
+
+.mdc-snackbar__action {
+    background: none;
+    border: none;
+    color: #bb86fc;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.mdc-snackbar__action:hover {
+    background-color: rgba(187, 134, 252, 0.1);
+}
+
+/* Dialog */
+.mdc-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    display: none;
+    opacity: 0;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+}
+
+.mdc-dialog__container {
+    max-width: 500px;
+    width: 90%;
+}
+
+.mdc-dialog__surface {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.mdc-dialog__header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mdc-dialog__title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.mdc-dialog__content {
+    padding: 16px 24px;
+}
+
+.mdc-dialog__actions {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.mdc-dialog__button {
+    background: none;
+    border: none;
+    color: #1976d2;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mdc-dialog__button:hover {
+    background-color: rgba(25, 118, 210, 0.08);
+}
+
+.mdc-dialog__scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Changes Container */
+.changes-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.change-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.change-item:last-child {
+    border-bottom: none;
+}
+
+.change-item--added {
+    background-color: #e8f5e8;
+    border-left: 4px solid #4caf50;
+}
+
+.change-item--modified {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.change-item--removed {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+.change-icon {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.change-icon--added {
+    color: #4caf50;
+}
+
+.change-icon--modified {
+    color: #ff9800;
+}
+
+.change-icon--removed {
+    color: #f44336;
+}
+
+.change-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.change-path {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.change-values {
+    font-size: 12px;
+    color: #666;
+    font-family: 'Courier New', monospace;
+}
+
+.change-old-value {
+    text-decoration: line-through;
+    color: #f44336;
+    margin-right: 8px;
+}
+
+.change-new-value {
+    color: #4caf50;
+    font-weight: 500;
+}
+
+.no-changes {
+    padding: 24px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.no-changes .material-icons {
+    font-size: 48px;
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+/* Smooth Transitions */
+* {
+    transition: all 0.2s ease-in-out;
+}
+
+.mdc-card {
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.mdc-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus States */
+.mdc-text-field:focus-within {
+    transform: translateY(-2px);
+}
+
+/* Animation for section reveals */
+.config-section,
+.actions-section {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease-out;
+}
+
+.config-section.show,
+.actions-section.show {
+    opacity: 1;
+    transform: translateY(0);
+}

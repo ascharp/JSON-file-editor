@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic JSON Configuration Editor</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Top App Bar -->
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <span class="mdc-top-app-bar__title">JSON Configuration Editor</span>
+            </section>
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+                <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" 
+                        onclick="showHelp()" aria-label="Help">
+                    help_outline
+                </button>
+            </section>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mdc-top-app-bar--fixed-adjust main-content">
+        <div class="container">
+            
+            <!-- Upload Section -->
+            <div class="upload-section mdc-card" style="display: block; padding: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin-bottom: 24px;">
+                <div class="mdc-card__primary-action">
+                    <div class="mdc-card__media-content">
+                        <h2 class="mdc-typography--headline6">Upload JSON Configuration</h2>
+                        <p class="mdc-typography--body2">Select a JSON file to load and edit its configuration parameters</p>
+                        
+                        <!-- File Input -->
+                        <div class="file-input-container">
+                            <button class="mdc-button mdc-button--raised" onclick="document.getElementById('fileInput').click()">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">cloud_upload</i>
+                                <span class="mdc-button__label">Choose JSON File</span>
+                            </button>
+                            <input type="file" id="fileInput" accept=".json" style="display: none;">
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <span class="file-name"></span>
+                                <span class="file-size"></span>
+                            </div>
+                        </div>
+
+                        <!-- Sample JSON Button -->
+                        <div class="sample-json-section">
+                            <button class="mdc-button mdc-button--outlined" onclick="loadSampleJSON()">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">code</i>
+                                <span class="mdc-button__label">Load Sample JSON</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Form Section -->
+            <div class="config-section" id="configSection" style="display: none;">
+                <div class="mdc-card">
+                    <div class="mdc-card__primary-action">
+                        <div class="mdc-card__media-content">
+                            <h2 class="mdc-typography--headline6">Configuration Parameters</h2>
+                            <p class="mdc-typography--body2">Edit the configuration values below</p>
+                            
+                            <form id="configForm" class="config-form">
+                                <!-- Dynamic form fields will be inserted here -->
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Section -->
+            <div class="actions-section" id="actionsSection" style="display: none;">
+                <div class="mdc-card">
+                    <div class="mdc-card__actions">
+                        <div class="mdc-card__action-buttons">
+                            <button class="mdc-button mdc-button--raised" id="exportButton">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">download</i>
+                                <span class="mdc-button__label">Export JSON</span>
+                            </button>
+                            <button class="mdc-button mdc-button--outlined" onclick="resetForm()">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">refresh</i>
+                                <span class="mdc-button__label">Reset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Snackbar for notifications -->
+    <div class="mdc-snackbar" id="snackbar">
+        <div class="mdc-snackbar__surface" role="status" aria-relevant="additions">
+            <div class="mdc-snackbar__label" aria-atomic="false">
+                Message will appear here
+            </div>
+            <div class="mdc-snackbar__actions" aria-atomic="true">
+                <button type="button" class="mdc-button mdc-snackbar__action">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">Dismiss</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="mdc-dialog" id="helpDialog">
+        <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
+                <div class="mdc-dialog__header">
+                    <h2 class="mdc-dialog__title">How to Use</h2>
+                </div>
+                <div class="mdc-dialog__content">
+                    <ol class="mdc-typography--body1">
+                        <li>Upload a JSON file using the "Choose JSON File" button</li>
+                        <li>Or click "Load Sample JSON" to try with example data</li>
+                        <li>Edit the configuration parameters in the form that appears</li>
+                        <li>Click "Export JSON" to download your updated configuration</li>
+                        <li>Use "Reset" to start over with a new file</li>
+                    </ol>
+                </div>
+                <div class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">Got it</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="mdc-dialog__scrim"></div>
+    </div>
+
+    <!-- Export Confirmation Dialog -->
+    <div class="mdc-dialog" id="exportConfirmDialog">
+        <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
+                <div class="mdc-dialog__header">
+                    <h2 class="mdc-dialog__title">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: #f57c00;">warning</i>
+                        Confirm Export Changes
+                    </h2>
+                </div>
+                <div class="mdc-dialog__content">
+                    <p class="mdc-typography--body1" style="margin-bottom: 16px;">
+                        You are about to export the following changes:
+                    </p>
+                    <div id="changesContainer" class="changes-container">
+                        <!-- Changes will be populated here -->
+                    </div>
+                    <p class="mdc-typography--body2" style="margin-top: 16px; color: #666;">
+                        Are you sure you want to download the updated configuration?
+                    </p>
+                </div>
+                <div class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-button--outlined mdc-dialog__button" id="cancelExport">
+                        <span class="mdc-button__label">Cancel</span>
+                    </button>
+                    <button type="button" class="mdc-button mdc-button--raised mdc-dialog__button" id="confirmExport">
+                        <i class="material-icons mdc-button__icon">download</i>
+                        <span class="mdc-button__label">Export JSON</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="mdc-dialog__scrim"></div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="js/main.js"></script>
+</body>
+</html>
