@@ -1,6 +1,8 @@
 // Global variables
 let currentJsonData = null;
 let originalJsonData = null; // Store original data for comparison
+let currentFileType = null; // 'json' or 'python'
+let originalFileContent = null; // Store original file content for Python files
 let mdcComponents = {};
 
 // Global functions for modal onclick handlers (must be defined at global scope)
@@ -31,30 +33,16 @@ window.testExport = function() {
     performExport(testData);
 };
 
-console.log('JavaScript loaded successfully');
-
 // Initialize Material Design Components
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    
     // Ensure upload section is visible
     const uploadSection = document.querySelector('.upload-section');
     if (uploadSection) {
         uploadSection.style.display = 'block';
-        console.log('Upload section made visible');
     }
     
     initializeMDCComponents();
     setupEventListeners();
-    
-    console.log('Initialization complete');
-    
-    // Test that global functions are accessible
-    console.log('Global functions defined:', {
-        cancelExportAction: typeof window.cancelExportAction,
-        confirmExportAction: typeof window.confirmExportAction,
-        testExport: typeof window.testExport
-    });
 });
 
 function initializeMDCComponents() {
@@ -138,33 +126,18 @@ function initializeMDCComponents() {
 }
 
 function setupEventListeners() {
-    console.log('Setting up event listeners...');
-    
     // File input change event
     const fileInput = document.getElementById('fileInput');
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
-        console.log('File input listener added');
-    } else {
-        console.error('File input not found!');
     }
     
     // Export button click event
     const exportButton = document.getElementById('exportButton');
     if (exportButton) {
-        exportButton.addEventListener('click', function(e) {
-            console.log('Export button clicked!');
-            exportJSON();
-        });
-        console.log('Export button listener added');
-        
+        exportButton.addEventListener('click', exportJSON);
         // Also add onclick as backup
-        exportButton.onclick = function(e) {
-            console.log('Export button onclick triggered!');
-            exportJSON();
-        };
-    } else {
-        console.error('Export button not found!');
+        exportButton.onclick = exportJSON;
     }
     
     // Snackbar action button
@@ -208,9 +181,14 @@ function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.name.toLowerCase().endsWith('.json')) {
-        showSnackbar('Please select a valid JSON file', 'error');
+    // Determine file type
+    const fileName = file.name.toLowerCase();
+    if (fileName.endsWith('.json')) {
+        currentFileType = 'json';
+    } else if (fileName.endsWith('.py')) {
+        currentFileType = 'python';
+    } else {
+        showSnackbar('Please select a valid JSON (.json) or Python (.py) file', 'error');
         return;
     }
 
@@ -220,18 +198,275 @@ function handleFileSelect(event) {
     // Read file content
     const reader = new FileReader();
     reader.onload = function(e) {
+        const fileContent = e.target.result;
+        originalFileContent = fileContent;
+
         try {
-            const jsonContent = JSON.parse(e.target.result);
-            currentJsonData = jsonContent;
-            originalJsonData = JSON.parse(JSON.stringify(jsonContent)); // Deep copy for comparison
-            generateConfigForm(jsonContent);
-            showSnackbar('JSON file loaded successfully!', 'success');
+            if (currentFileType === 'json') {
+                processJsonFile(fileContent);
+            } else if (currentFileType === 'python') {
+                processPythonFile(fileContent);
+            }
         } catch (error) {
-            showSnackbar('Invalid JSON file. Please check the format.', 'error');
-            console.error('JSON parsing error:', error);
+            showSnackbar(`Invalid ${currentFileType.toUpperCase()} file. Please check the format.`, 'error');
+            console.error(`${currentFileType} parsing error:`, error);
         }
     };
     reader.readAsText(file);
+}
+
+function processJsonFile(content) {
+    const jsonContent = JSON.parse(content);
+    currentJsonData = jsonContent;
+    originalJsonData = JSON.parse(JSON.stringify(jsonContent)); // Deep copy for comparison
+    generateConfigForm(jsonContent);
+    showSnackbar('JSON file loaded successfully!', 'success');
+}
+
+function processPythonFile(content) {
+    const extractedConfig = extractPythonDAGConfig(content);
+    
+    if (Object.keys(extractedConfig).length === 0) {
+        showSnackbar('No configuration parameters found in Python file', 'warning');
+        return;
+    }
+    
+    currentJsonData = extractedConfig;
+    originalJsonData = JSON.parse(JSON.stringify(extractedConfig)); // Deep copy for comparison
+    generateConfigForm(extractedConfig);
+    showSnackbar('Python DAG loaded successfully!', 'success');
+}
+
+function extractPythonDAGConfig(pythonContent) {
+    const config = {};
+    
+    try {
+        // Extract variable assignments with various Python data types
+        const patterns = {
+            // String variables: var_name = "value" or var_name = 'value'
+            strings: /^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*["']([^"']*?)["']/gm,
+            // Number variables: var_name = 123 or var_name = 12.34
+            numbers: /^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(-?\d+(?:\.\d+)?)/gm,
+            // Boolean variables: var_name = True/False
+            booleans: /^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(True|False)/gm,
+            // List variables: var_name = [item1, item2, ...]
+            lists: /^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*\[(.*?)\]/gm,
+            // Dictionary variables: var_name = {key: value, ...}
+            dicts: /^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*\{([^}]*)\}/gm
+        };
+
+        // Extract DAG default_args if present
+        const dagArgsPattern = /default_args\s*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/s;
+        const dagArgsMatch = pythonContent.match(dagArgsPattern);
+        if (dagArgsMatch) {
+            config.default_args = parsePythonDict(dagArgsMatch[1]);
+        }
+
+        // Extract DAG definition parameters
+        const dagPattern = /DAG\s*\(\s*([^)]*)\)/s;
+        const dagMatch = pythonContent.match(dagPattern);
+        if (dagMatch) {
+            const dagParams = parseDagParameters(dagMatch[1]);
+            config.dag_config = dagParams;
+        }
+
+        // Extract simple variable assignments
+        let match;
+        
+        // Strings
+        while ((match = patterns.strings.exec(pythonContent)) !== null) {
+            const varName = match[2];
+            const value = match[3];
+            setNestedConfigValue(config, varName, value);
+        }
+
+        // Reset regex state
+        patterns.strings.lastIndex = 0;
+
+        // Numbers
+        while ((match = patterns.numbers.exec(pythonContent)) !== null) {
+            const varName = match[2];
+            const value = parseFloat(match[3]);
+            setNestedConfigValue(config, varName, value);
+        }
+
+        patterns.numbers.lastIndex = 0;
+
+        // Booleans
+        while ((match = patterns.booleans.exec(pythonContent)) !== null) {
+            const varName = match[2];
+            const value = match[3] === 'True';
+            setNestedConfigValue(config, varName, value);
+        }
+
+        patterns.booleans.lastIndex = 0;
+
+        // Lists
+        while ((match = patterns.lists.exec(pythonContent)) !== null) {
+            const varName = match[2];
+            const listContent = match[3].trim();
+            const value = parsePythonList(listContent);
+            setNestedConfigValue(config, varName, value);
+        }
+
+        patterns.lists.lastIndex = 0;
+
+        // Dictionaries
+        while ((match = patterns.dicts.exec(pythonContent)) !== null) {
+            const varName = match[2];
+            const dictContent = match[3];
+            const value = parsePythonDict(dictContent);
+            setNestedConfigValue(config, varName, value);
+        }
+
+        patterns.dicts.lastIndex = 0;
+
+        // Extract task configurations
+        const taskConfigs = extractTaskConfigurations(pythonContent);
+        if (Object.keys(taskConfigs).length > 0) {
+            config.tasks = taskConfigs;
+        }
+
+        return config;
+
+    } catch (error) {
+        console.error('Error parsing Python DAG:', error);
+        return {};
+    }
+}
+
+function parsePythonDict(dictContent) {
+    const result = {};
+    
+    // Handle simple key-value pairs
+    const pairs = dictContent.split(',');
+    
+    for (let pair of pairs) {
+        pair = pair.trim();
+        if (!pair) continue;
+        
+        const colonIndex = pair.indexOf(':');
+        if (colonIndex === -1) continue;
+        
+        const key = pair.substring(0, colonIndex).trim().replace(/["']/g, '');
+        const value = pair.substring(colonIndex + 1).trim();
+        
+        result[key] = parsePythonValue(value);
+    }
+    
+    return result;
+}
+
+function parsePythonList(listContent) {
+    if (!listContent || listContent.trim() === '') return [];
+    
+    const items = listContent.split(',');
+    return items.map(item => parsePythonValue(item.trim())).filter(item => item !== null);
+}
+
+function parsePythonValue(value) {
+    value = value.trim();
+    
+    // Remove trailing comma if present
+    if (value.endsWith(',')) {
+        value = value.slice(0, -1).trim();
+    }
+    
+    // String values
+    if ((value.startsWith('"') && value.endsWith('"')) || 
+        (value.startsWith("'") && value.endsWith("'"))) {
+        return value.slice(1, -1);
+    }
+    
+    // Boolean values
+    if (value === 'True') return true;
+    if (value === 'False') return false;
+    if (value === 'None') return null;
+    
+    // Number values
+    if (/^-?\d+(\.\d+)?$/.test(value)) {
+        return parseFloat(value);
+    }
+    
+    // Default to string if we can't parse it
+    return value;
+}
+
+function parseDagParameters(paramString) {
+    const params = {};
+    const lines = paramString.split(',');
+    
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        
+        const equalIndex = line.indexOf('=');
+        if (equalIndex === -1) continue;
+        
+        const key = line.substring(0, equalIndex).trim();
+        const value = line.substring(equalIndex + 1).trim();
+        
+        params[key] = parsePythonValue(value);
+    }
+    
+    return params;
+}
+
+function extractTaskConfigurations(pythonContent) {
+    const tasks = {};
+    
+    // Look for task definitions (common patterns)
+    const taskPatterns = [
+        // PythonOperator, BashOperator, etc.
+        /(\w+)\s*=\s*(\w+Operator)\s*\(\s*([^)]*)\)/g,
+        // Task decorators
+        /@task[^(]*\([^)]*\)\s*def\s+(\w+)/g
+    ];
+    
+    for (const pattern of taskPatterns) {
+        let match;
+        while ((match = pattern.exec(pythonContent)) !== null) {
+            const taskName = match[1];
+            const taskType = match[2] || 'PythonOperator';
+            const taskParams = match[3] ? parseDagParameters(match[3]) : {};
+            
+            tasks[taskName] = {
+                type: taskType,
+                parameters: taskParams
+            };
+        }
+        pattern.lastIndex = 0;
+    }
+    
+    return tasks;
+}
+
+function setNestedConfigValue(config, key, value) {
+    // Handle nested keys like "database_config_host" -> database.config.host
+    const parts = key.split('_');
+    let current = config;
+    
+    // If it's a simple key, just set it
+    if (parts.length <= 2) {
+        config[key] = value;
+        return;
+    }
+    
+    // For longer keys, try to create nested structure
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!(part in current)) {
+            current[part] = {};
+        }
+        if (typeof current[part] !== 'object') {
+            // If it's not an object, we can't nest further, so use the full key
+            config[key] = value;
+            return;
+        }
+        current = current[part];
+    }
+    
+    current[parts[parts.length - 1]] = value;
 }
 
 function showFileInfo(file) {
@@ -239,7 +474,14 @@ function showFileInfo(file) {
     const fileName = fileInfo.querySelector('.file-name');
     const fileSize = fileInfo.querySelector('.file-size');
     
-    fileName.textContent = file.name;
+    // Add file type indicator
+    const fileType = currentFileType.toUpperCase();
+    const typeColor = currentFileType === 'json' ? '#4caf50' : '#ff9800';
+    
+    fileName.innerHTML = `
+        <span style="color: ${typeColor}; font-weight: bold;">[${fileType}]</span> 
+        ${file.name}
+    `;
     fileSize.textContent = formatFileSize(file.size);
     fileInfo.style.display = 'block';
 }
@@ -291,15 +533,114 @@ function loadSampleJSON() {
         }
     };
 
+    currentFileType = 'json';
     currentJsonData = sampleData;
     originalJsonData = JSON.parse(JSON.stringify(sampleData)); // Deep copy for comparison
+    originalFileContent = JSON.stringify(sampleData, null, 2);
     generateConfigForm(sampleData);
     showSnackbar('Sample JSON loaded successfully!', 'success');
+}
+
+function loadSamplePythonDAG() {
+    const samplePythonDAG = `# Sample Airflow DAG Configuration
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
+
+# DAG Configuration
+dag_id = "sample_etl_pipeline"
+owner = "data_team"
+retries = 3
+retry_delay_minutes = 5
+email_on_failure = True
+email_on_retry = False
+start_date = "2024-01-01"
+
+# Database Configuration
+database_host = "localhost"
+database_port = 5432
+database_name = "analytics_db"
+database_ssl_enabled = True
+connection_timeout = 30
+
+# Processing Configuration
+batch_size = 1000
+max_parallel_tasks = 4
+data_retention_days = 90
+enable_monitoring = True
+debug_mode = False
+
+# Notification Configuration
+slack_webhook = "https://hooks.slack.com/services/your/webhook/url"
+notification_channels = ["#data-alerts", "#engineering"]
+alert_thresholds = {
+    'error_rate': 0.05,
+    'processing_time': 3600,
+    'memory_usage': 0.8
+}
+
+# Default arguments for the DAG
+default_args = {
+    'owner': owner,
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': email_on_failure,
+    'email_on_retry': email_on_retry,
+    'retries': retries,
+    'retry_delay': timedelta(minutes=retry_delay_minutes)
+}
+
+# Create the DAG
+dag = DAG(
+    dag_id=dag_id,
+    default_args=default_args,
+    description='Sample ETL pipeline for data processing',
+    schedule_interval='@daily',
+    catchup=False,
+    max_active_runs=1
+)
+
+# Task definitions
+extract_data = PythonOperator(
+    task_id='extract_data',
+    python_callable=extract_data_function,
+    dag=dag
+)
+
+transform_data = PythonOperator(
+    task_id='transform_data',
+    python_callable=transform_data_function,
+    dag=dag
+)
+
+load_data = BashOperator(
+    task_id='load_data',
+    bash_command='python /scripts/load_data.py',
+    dag=dag
+)
+
+# Set task dependencies
+extract_data >> transform_data >> load_data`;
+
+    currentFileType = 'python';
+    originalFileContent = samplePythonDAG;
+    
+    // Process the Python DAG to extract configuration
+    const extractedConfig = extractPythonDAGConfig(samplePythonDAG);
+    
+    currentJsonData = extractedConfig;
+    originalJsonData = JSON.parse(JSON.stringify(extractedConfig)); // Deep copy for comparison
+    generateConfigForm(extractedConfig);
+    showSnackbar('Sample Python DAG loaded successfully!', 'success');
 }
 
 function generateConfigForm(jsonData) {
     const formContainer = document.getElementById('configForm');
     formContainer.innerHTML = '';
+
+    // Update UI to reflect file type
+    updateConfigUI();
 
     // Generate form fields recursively
     generateFormFields(jsonData, formContainer, '');
@@ -318,6 +659,36 @@ function generateConfigForm(jsonData) {
 
     // Initialize new MDC components
     initializeFormComponents();
+}
+
+function updateConfigUI() {
+    const configTitle = document.getElementById('configTitle');
+    const configDescription = document.getElementById('configDescription');
+    const exportButton = document.getElementById('exportButton');
+    
+    if (currentFileType === 'python') {
+        configTitle.innerHTML = `
+            <i class="material-icons" style="vertical-align: middle; color: #ff9800; margin-right: 8px;">code</i>
+            Python DAG Configuration
+        `;
+        configDescription.textContent = 'Edit the DAG configuration parameters extracted from your Python file';
+        if (exportButton) {
+            exportButton.querySelector('.mdc-button__label').textContent = 'Export Python DAG';
+            const icon = exportButton.querySelector('.mdc-button__icon');
+            if (icon) icon.textContent = 'code';
+        }
+    } else {
+        configTitle.innerHTML = `
+            <i class="material-icons" style="vertical-align: middle; color: #4caf50; margin-right: 8px;">description</i>
+            JSON Configuration
+        `;
+        configDescription.textContent = 'Edit the configuration values below';
+        if (exportButton) {
+            exportButton.querySelector('.mdc-button__label').textContent = 'Export JSON';
+            const icon = exportButton.querySelector('.mdc-button__icon');
+            if (icon) icon.textContent = 'download';
+        }
+    }
 }
 
 function generateFormFields(obj, container, prefix) {
@@ -822,62 +1193,204 @@ function closeExportDialog() {
 }
 
 function performExport(updatedData) {
-    console.log('=== PERFORM EXPORT CALLED ===');
-    console.log('Data:', updatedData);
-    
     if (!updatedData) {
-        console.error('No data provided to export!');
         showSnackbar('Error: No data to export', 'error');
         return;
     }
     
     try {
-        console.log('Creating JSON string...');
-        const jsonString = JSON.stringify(updatedData, null, 2);
-        console.log('JSON created, length:', jsonString.length);
+        let fileContent, fileName, mimeType;
         
-        console.log('Creating blob...');
-        const blob = new Blob([jsonString], { type: 'application/json' });
+        if (currentFileType === 'python') {
+            fileContent = generatePythonDAGFromConfig(updatedData);
+            fileName = 'updated-dag.py';
+            mimeType = 'text/x-python';
+        } else {
+            fileContent = JSON.stringify(updatedData, null, 2);
+            fileName = 'updated-config.json';
+            mimeType = 'application/json';
+        }
         
-        console.log('Creating download URL...');
+        const blob = new Blob([fileContent], { type: mimeType });
         const url = URL.createObjectURL(blob);
         
-        console.log('Creating download link...');
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'updated-config.json';
+        link.download = fileName;
         link.style.display = 'none';
         
-        console.log('Appending link to body...');
         document.body.appendChild(link);
-        
-        console.log('Triggering download...');
         link.click();
         
-        console.log('Cleaning up...');
         setTimeout(() => {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            console.log('Cleanup complete');
         }, 100);
         
-        console.log('=== EXPORT SUCCESS ===');
-        showSnackbar('JSON file exported successfully!', 'success');
+        const fileTypeLabel = currentFileType === 'python' ? 'Python DAG' : 'JSON';
+        showSnackbar(`${fileTypeLabel} file exported successfully!`, 'success');
         
     } catch (error) {
-        console.error('=== EXPORT ERROR ===', error);
-        showSnackbar('Error exporting JSON file', 'error');
+        console.error('Export error:', error);
+        showSnackbar('Error exporting file', 'error');
     }
+}
+
+function generatePythonDAGFromConfig(configData) {
+    
+    let pythonCode = `# Generated Airflow DAG Configuration
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
+
+`;
+
+    // Generate variable assignments from config
+    const generateVariables = (obj, prefix = '') => {
+        let code = '';
+        for (const [key, value] of Object.entries(obj)) {
+            const varName = prefix ? `${prefix}_${key}` : key;
+            
+            if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+                // Handle nested objects
+                if (key === 'default_args' || key === 'dag_config') {
+                    // These will be handled specially
+                    continue;
+                }
+                code += generateVariables(value, varName);
+            } else {
+                // Generate variable assignment
+                code += `${varName} = ${formatPythonValue(value)}\n`;
+            }
+        }
+        return code;
+    };
+
+    // Generate configuration variables
+    pythonCode += '# Configuration Variables\n';
+    pythonCode += generateVariables(configData);
+    pythonCode += '\n';
+
+    // Generate default_args if present
+    if (configData.default_args) {
+        pythonCode += '# Default arguments for the DAG\n';
+        pythonCode += 'default_args = {\n';
+        for (const [key, value] of Object.entries(configData.default_args)) {
+            pythonCode += `    '${key}': ${formatPythonValue(value)},\n`;
+        }
+        pythonCode += '}\n\n';
+    } else {
+        pythonCode += `# Default arguments for the DAG
+default_args = {
+    'owner': '${configData.owner || 'airflow'}',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': ${configData.email_on_failure || 'False'},
+    'email_on_retry': ${configData.email_on_retry || 'False'},
+    'retries': ${configData.retries || 1},
+    'retry_delay': timedelta(minutes=${configData.retry_delay_minutes || 5})
+}
+
+`;
+    }
+
+    // Generate DAG definition
+    pythonCode += '# Create the DAG\n';
+    const dagId = configData.dag_id || configData.dag_config?.dag_id || 'generated_dag';
+    pythonCode += `dag = DAG(
+    dag_id='${dagId}',
+    default_args=default_args,
+    description='Generated DAG from configuration',
+    schedule_interval='@daily',
+    catchup=False,
+    max_active_runs=1
+)
+
+`;
+
+    // Generate tasks if present
+    if (configData.tasks) {
+        pythonCode += '# Task definitions\n';
+        const taskNames = [];
+        
+        for (const [taskName, taskConfig] of Object.entries(configData.tasks)) {
+            const operatorType = taskConfig.type || 'PythonOperator';
+            taskNames.push(taskName);
+            
+            pythonCode += `${taskName} = ${operatorType}(\n`;
+            pythonCode += `    task_id='${taskName}',\n`;
+            
+            if (taskConfig.parameters) {
+                for (const [param, value] of Object.entries(taskConfig.parameters)) {
+                    pythonCode += `    ${param}=${formatPythonValue(value)},\n`;
+                }
+            }
+            
+            pythonCode += '    dag=dag\n';
+            pythonCode += ')\n\n';
+        }
+        
+        // Generate simple task dependencies if there are multiple tasks
+        if (taskNames.length > 1) {
+            pythonCode += '# Set task dependencies\n';
+            pythonCode += taskNames.join(' >> ') + '\n';
+        }
+    } else {
+        // Generate sample tasks
+        pythonCode += `# Sample task definitions
+sample_task = PythonOperator(
+    task_id='sample_task',
+    python_callable=lambda: print('Task executed successfully'),
+    dag=dag
+)
+`;
+    }
+
+    return pythonCode;
+}
+
+function formatPythonValue(value) {
+    if (value === null) return 'None';
+    if (typeof value === 'boolean') return value ? 'True' : 'False';
+    if (typeof value === 'string') return `'${value.replace(/'/g, "\\'")}'`;
+    if (typeof value === 'number') return value.toString();
+    if (Array.isArray(value)) {
+        const items = value.map(item => formatPythonValue(item)).join(', ');
+        return `[${items}]`;
+    }
+    if (typeof value === 'object') {
+        const items = Object.entries(value)
+            .map(([k, v]) => `'${k}': ${formatPythonValue(v)}`)
+            .join(', ');
+        return `{${items}}`;
+    }
+    return `'${String(value)}'`;
 }
 
 function resetForm() {
     currentJsonData = null;
     originalJsonData = null;
+    currentFileType = null;
+    originalFileContent = null;
     document.getElementById('configForm').innerHTML = '';
     document.getElementById('configSection').style.display = 'none';
     document.getElementById('actionsSection').style.display = 'none';
     document.getElementById('fileInfo').style.display = 'none';
     document.getElementById('fileInput').value = '';
+    
+    // Reset UI elements
+    const configTitle = document.getElementById('configTitle');
+    const configDescription = document.getElementById('configDescription');
+    const exportButton = document.getElementById('exportButton');
+    
+    if (configTitle) configTitle.textContent = 'Configuration Parameters';
+    if (configDescription) configDescription.textContent = 'Edit the configuration values below';
+    if (exportButton) {
+        exportButton.querySelector('.mdc-button__label').textContent = 'Export JSON';
+        const icon = exportButton.querySelector('.mdc-button__icon');
+        if (icon) icon.textContent = 'download';
+    }
     
     showSnackbar('Form reset successfully', 'success');
 }

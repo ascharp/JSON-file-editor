@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic JSON Configuration Editor</title>
+    <title>Dynamic Configuration Editor - JSON & Python DAG</title>
     
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -19,7 +19,7 @@
     <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
         <div class="mdc-top-app-bar__row">
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-                <span class="mdc-top-app-bar__title">JSON Configuration Editor</span>
+                <span class="mdc-top-app-bar__title">Configuration Editor</span>
             </section>
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
                 <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" 
@@ -38,17 +38,17 @@
             <div class="upload-section mdc-card" style="display: block; padding: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin-bottom: 24px;">
                 <div class="mdc-card__primary-action">
                     <div class="mdc-card__media-content">
-                        <h2 class="mdc-typography--headline6">Upload JSON Configuration</h2>
-                        <p class="mdc-typography--body2">Select a JSON file to load and edit its configuration parameters</p>
+                        <h2 class="mdc-typography--headline6">Upload Configuration File</h2>
+                        <p class="mdc-typography--body2">Select a JSON configuration file or Python DAG file to load and edit its parameters</p>
                         
                         <!-- File Input -->
                         <div class="file-input-container">
                             <button class="mdc-button mdc-button--raised" onclick="document.getElementById('fileInput').click()">
                                 <span class="mdc-button__ripple"></span>
                                 <i class="material-icons mdc-button__icon" aria-hidden="true">cloud_upload</i>
-                                <span class="mdc-button__label">Choose JSON File</span>
+                                <span class="mdc-button__label">Choose File</span>
                             </button>
-                            <input type="file" id="fileInput" accept=".json" style="display: none;">
+                            <input type="file" id="fileInput" accept=".json,.py" style="display: none;">
                             <div class="file-info" id="fileInfo" style="display: none;">
                                 <span class="file-name"></span>
                                 <span class="file-size"></span>
@@ -59,8 +59,13 @@
                         <div class="sample-json-section">
                             <button class="mdc-button mdc-button--outlined" onclick="loadSampleJSON()">
                                 <span class="mdc-button__ripple"></span>
-                                <i class="material-icons mdc-button__icon" aria-hidden="true">code</i>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">description</i>
                                 <span class="mdc-button__label">Load Sample JSON</span>
+                            </button>
+                            <button class="mdc-button mdc-button--outlined" onclick="loadSamplePythonDAG()" style="margin-left: 8px;">
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon" aria-hidden="true">code</i>
+                                <span class="mdc-button__label">Load Sample Python DAG</span>
                             </button>
                             <button class="mdc-button mdc-button--outlined" onclick="window.testExport()" style="margin-left: 8px;">
                                 <span class="mdc-button__ripple"></span>
@@ -77,8 +82,8 @@
                 <div class="mdc-card">
                     <div class="mdc-card__primary-action">
                         <div class="mdc-card__media-content">
-                            <h2 class="mdc-typography--headline6">Configuration Parameters</h2>
-                            <p class="mdc-typography--body2">Edit the configuration values below</p>
+                            <h2 class="mdc-typography--headline6" id="configTitle">Configuration Parameters</h2>
+                            <p class="mdc-typography--body2" id="configDescription">Edit the configuration values below</p>
                             
                             <form id="configForm" class="config-form">
                                 <!-- Dynamic form fields will be inserted here -->
@@ -134,13 +139,25 @@
                     <h2 class="mdc-dialog__title">How to Use</h2>
                 </div>
                 <div class="mdc-dialog__content">
-                    <ol class="mdc-typography--body1">
-                        <li>Upload a JSON file using the "Choose JSON File" button</li>
-                        <li>Or click "Load Sample JSON" to try with example data</li>
-                        <li>Edit the configuration parameters in the form that appears</li>
-                        <li>Click "Export JSON" to download your updated configuration</li>
-                        <li>Use "Reset" to start over with a new file</li>
-                    </ol>
+                    <div class="mdc-typography--body1">
+                        <h3>For JSON Configuration Files:</h3>
+                        <ol>
+                            <li>Upload a JSON file using the "Choose File" button</li>
+                            <li>Or click "Load Sample JSON" to try with example data</li>
+                            <li>Edit the configuration parameters in the form</li>
+                            <li>Click "Export JSON" to download your updated configuration</li>
+                        </ol>
+                        
+                        <h3>For Python DAG Files:</h3>
+                        <ol>
+                            <li>Upload a Python file (.py) containing an Airflow DAG</li>
+                            <li>Or click "Load Sample Python DAG" to try with example code</li>
+                            <li>Edit the extracted DAG configuration parameters</li>
+                            <li>Click "Export Python DAG" to download your updated DAG</li>
+                        </ol>
+                        
+                        <p style="margin-top: 16px;"><strong>General:</strong> Use "Reset" to start over with a new file. All changes are shown in a confirmation dialog before export.</p>
+                    </div>
                 </div>
                 <div class="mdc-dialog__actions">
                     <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
@@ -175,10 +192,10 @@
                     </p>
                 </div>
                 <div class="mdc-dialog__actions">
-                    <button type="button" class="mdc-button mdc-button--outlined mdc-dialog__button" id="cancelExport" onclick="console.log('Cancel button HTML onclick'); window.cancelExportAction();">
+                    <button type="button" class="mdc-button mdc-button--outlined mdc-dialog__button" id="cancelExport" onclick="window.cancelExportAction();">
                         <span class="mdc-button__label">Cancel</span>
                     </button>
-                    <button type="button" class="mdc-button mdc-button--raised mdc-dialog__button" id="confirmExport" onclick="console.log('Confirm button HTML onclick'); window.confirmExportAction();">
+                    <button type="button" class="mdc-button mdc-button--raised mdc-dialog__button" id="confirmExport" onclick="window.confirmExportAction();">
                         <i class="material-icons mdc-button__icon">download</i>
                         <span class="mdc-button__label">Export JSON</span>
                     </button>
