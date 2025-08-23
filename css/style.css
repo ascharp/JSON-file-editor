@@ -116,7 +116,91 @@ body {
 }
 
 .sample-json-section {
-    margin-top: 16px;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.sample-section-title {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sample-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.sample-button {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    color: #1976d2 !important;
+    border: 2px solid rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    font-weight: 600;
+    margin: 0 !important;
+    padding: 12px 20px !important;
+    min-width: 160px;
+    transition: all 0.3s ease;
+}
+
+.sample-button:hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: #1976d2 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    transform: translateY(-3px) scale(1.02);
+}
+
+.sample-button:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.sample-button .mdc-button__icon {
+    color: #1976d2 !important;
+    font-size: 20px;
+}
+
+.sample-button .mdc-button__label {
+    color: #1976d2 !important;
+    font-weight: 600;
+}
+
+/* Special styling for test button */
+.test-button {
+    background-color: rgba(255, 193, 7, 0.95) !important;
+    border-color: rgba(255, 193, 7, 0.9) !important;
+    color: #795548 !important;
+}
+
+.test-button:hover {
+    background-color: rgba(255, 193, 7, 1) !important;
+    border-color: #795548 !important;
+}
+
+.test-button .mdc-button__icon,
+.test-button .mdc-button__label {
+    color: #795548 !important;
+}
+
+/* Responsive design for buttons */
+@media (max-width: 768px) {
+    .sample-buttons-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .sample-button {
+        min-width: unset;
+        width: 100%;
+    }
 }
 
 /* Configuration Form */
@@ -178,9 +262,9 @@ body {
 .mdc-text-field {
     width: 100%;
     margin-bottom: 16px;
-    position: relative;
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .mdc-text-field--outlined {
@@ -196,6 +280,7 @@ body {
     border: 2px solid #e0e0e0;
     border-radius: 4px;
     transition: border-color 0.2s ease;
+    flex: 1;
 }
 
 .mdc-text-field:focus-within .mdc-notched-outline {
@@ -204,31 +289,27 @@ body {
 }
 
 .mdc-notched-outline__leading,
-.mdc-notched-outline__trailing {
-    display: none; /* Simplified */
-}
-
+.mdc-notched-outline__trailing,
 .mdc-notched-outline__notch {
-    position: absolute;
-    top: -8px;
-    left: 12px;
-    background: white;
-    padding: 0 4px;
-    pointer-events: none;
+    display: none; /* Simplified - no longer needed */
 }
 
 .mdc-floating-label {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    font-size: 16px;
+    display: block;
+    font-size: 14px;
     color: #757575;
-    pointer-events: none;
-    transition: all 0.2s ease;
-    transform-origin: left top;
-    background: white;
-    padding: 0 4px;
-    margin-left: -4px;
+    margin-bottom: 4px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* When focused, change color */
+.mdc-text-field:focus-within .mdc-floating-label {
+    color: #1976d2;
 }
 
 .mdc-text-field__input {
@@ -241,6 +322,7 @@ body {
     color: #212121;
     width: 100%;
     box-sizing: border-box;
+    border-radius: 4px;
 }
 
 .mdc-text-field__input:focus {
@@ -250,6 +332,12 @@ body {
 .mdc-text-field__resizer {
     display: block;
     position: relative;
+    width: 100%;
+}
+
+.mdc-text-field__resizer textarea {
+    width: 100%;
+    resize: vertical;
 }
 
 /* Switch Styling */

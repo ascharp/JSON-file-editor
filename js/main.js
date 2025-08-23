@@ -749,35 +749,33 @@ function createInputField(key, value, fieldName, fieldId) {
     } else if (fieldType === 'textarea') {
         // Create textarea for long strings
         fieldDiv.innerHTML = `
-            <label class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea">
+            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea">
+                <span class="mdc-floating-label" id="${fieldId}-label">${formatFieldLabel(key)}</span>
                 <span class="mdc-notched-outline">
                     <span class="mdc-notched-outline__leading"></span>
-                    <span class="mdc-notched-outline__notch">
-                        <span class="mdc-floating-label" id="${fieldId}-label">${formatFieldLabel(key)}</span>
-                    </span>
+                    <span class="mdc-notched-outline__notch"></span>
                     <span class="mdc-notched-outline__trailing"></span>
                 </span>
                 <span class="mdc-text-field__resizer">
                     <textarea class="mdc-text-field__input" id="${fieldId}" 
                               data-field="${fieldName}" rows="4" cols="40">${value}</textarea>
                 </span>
-            </label>
+            </div>
         `;
     } else {
         // Create regular text input
         const inputType = fieldType === 'number' ? 'number' : 'text';
         fieldDiv.innerHTML = `
-            <label class="mdc-text-field mdc-text-field--outlined">
+            <div class="mdc-text-field mdc-text-field--outlined">
+                <span class="mdc-floating-label" id="${fieldId}-label">${formatFieldLabel(key)}</span>
                 <span class="mdc-notched-outline">
                     <span class="mdc-notched-outline__leading"></span>
-                    <span class="mdc-notched-outline__notch">
-                        <span class="mdc-floating-label" id="${fieldId}-label">${formatFieldLabel(key)}</span>
-                    </span>
+                    <span class="mdc-notched-outline__notch"></span>
                     <span class="mdc-notched-outline__trailing"></span>
                 </span>
                 <input type="${inputType}" class="mdc-text-field__input" id="${fieldId}" 
                        data-field="${fieldName}" value="${value}">
-            </label>
+            </div>
         `;
     }
 
@@ -880,23 +878,14 @@ function initializeFormComponents() {
         const label = textField.querySelector('.mdc-floating-label');
         
         if (input && label) {
-            // Handle label floating
-            function updateLabel() {
-                if (input.value || input === document.activeElement) {
-                    label.style.transform = 'translateY(-16px) scale(0.75)';
-                    label.style.color = '#1976d2';
-                } else {
-                    label.style.transform = 'translateY(0) scale(1)';
-                    label.style.color = '#757575';
-                }
-            }
+            // Simple focus/blur effects for labels
+            input.addEventListener('focus', function() {
+                label.style.color = '#1976d2';
+            });
             
-            input.addEventListener('focus', updateLabel);
-            input.addEventListener('blur', updateLabel);
-            input.addEventListener('input', updateLabel);
-            
-            // Initial state
-            updateLabel();
+            input.addEventListener('blur', function() {
+                label.style.color = '#757575';
+            });
         }
     });
     
@@ -1113,8 +1102,37 @@ function showExportConfirmation(changes, updatedData) {
         }, 10);
     }
     
+    // Update modal button text based on file type
+    updateExportModalButton();
+    
     // Set up confirmation handlers
     setupExportConfirmationHandlers(updatedData);
+}
+
+function updateExportModalButton() {
+    const confirmExportLabel = document.getElementById('confirmExportLabel');
+    const confirmExportIcon = document.getElementById('confirmExportIcon');
+    const exportModalTitle = document.getElementById('exportModalTitle');
+    
+    if (currentFileType === 'python') {
+        if (confirmExportLabel) confirmExportLabel.textContent = 'Export DAG';
+        if (confirmExportIcon) confirmExportIcon.textContent = 'code';
+        if (exportModalTitle) {
+            exportModalTitle.innerHTML = `
+                <i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: #ff9800;">code</i>
+                Confirm DAG Export Changes
+            `;
+        }
+    } else {
+        if (confirmExportLabel) confirmExportLabel.textContent = 'Export JSON';
+        if (confirmExportIcon) confirmExportIcon.textContent = 'download';
+        if (exportModalTitle) {
+            exportModalTitle.innerHTML = `
+                <i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: #f57c00;">warning</i>
+                Confirm Export Changes
+            `;
+        }
+    }
 }
 
 function createChangeElement(change) {
